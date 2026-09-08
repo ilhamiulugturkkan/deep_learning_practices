@@ -12,10 +12,11 @@ b = torch.rand(1, requires_grad=True)
 
 print(w,b)
 
-
-for i in range(100000):
+losses = []
+for i in range(100001):
     y_pred = x * w + b
     loss = ((y - y_pred)**2).mean()
+    losses.append(loss)
     loss.backward()
     with torch.no_grad():
         w.data -= 0.001 * w.grad
@@ -23,8 +24,8 @@ for i in range(100000):
     w.grad.zero_()
     b.grad.zero_()
     if i % 1000 == 0:
-        print(w.data,b.data)
         print(loss.data)
+print(w,b)
 
 
 

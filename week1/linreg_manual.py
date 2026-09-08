@@ -16,13 +16,12 @@ w = random.uniform(-10,10)
 b = random.uniform(-10,10)
 
 # Training loop
-for i in range(10000):
+for i in range(10001):
     y_pred = x * w + b
     loss = ((y - y_pred)**2).mean()
     w -= 0.001 * (-2*x*(y-w*x-b)).mean()
     b -= 0.001 * (-2*(y-w*x-b)).mean()
     if i % 1000 == 0:
-        print(w.data,b.data)
         print(loss.data)
 
 print(w, b)
