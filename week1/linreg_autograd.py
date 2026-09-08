@@ -3,7 +3,8 @@ import random
 import matplotlib.pyplot as plt
 
 x = torch.rand(20000)
-y = 3 * x + 2 + random.uniform(-1,1)
+error = torch.rand(20000)
+y = 3 * x + 2 + error
 
 
 w = torch.rand(1, requires_grad=True)
