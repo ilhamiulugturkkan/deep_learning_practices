@@ -5,13 +5,6 @@ x = torch.rand(20000)
 error = torch.rand_like(x)
 y = 3 * x + 2 + error
 
-
-# MSE  = sum((y - (wx + b))^2) = sum((y - wx - b)^2)
-# dMSE/dw = -2x(y - wx - b)
-# dMSE/db = -2(y - wx - b)
-
-
-# Randomly initialize initial w and b
 w = random.uniform(-10,10)
 b = random.uniform(-10,10)
 

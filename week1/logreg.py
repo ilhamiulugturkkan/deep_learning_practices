@@ -10,19 +10,15 @@ print(f'{y.shape}')
 x_tensor = torch.tensor(x)
 y_tensor = torch.tensor(y)
 
-w = torch.rand(2, requires_grad=True)
-b = torch.rand(1, requires_grad=True)
-
-x_tensor = x_tensor.float()
-w = w.float()
-b = b.float()
+w = torch.rand(2, requires_grad=True, dtype=x_tensor.dtype)
+b = torch.rand(1, requires_grad=True, dtype=x_tensor.dtype)
 
 
 lr = 0.001
 for i in range(5000):
     y_pred = torch.sigmoid((x_tensor @ w + b)) #FORWARD PASS. I had some problems with the matmul especially because of dtypes of elements
 
-    cross_entropy = sum(-(y_tensor * torch.log(y_pred)+ (1-y_tensor) * torch.log(1-y_pred))) # LOSS FUNCTION (couldnt remember it so checked google)
+    cross_entropy = (-(y_tensor * torch.log(y_pred)+ (1-y_tensor) * torch.log(1-y_pred))).sum() # LOSS FUNCTION (couldnt remember it so checked google)
 
 
     cross_entropy.backward() # BACKPROPOGATION
@@ -41,6 +37,13 @@ for i in range(5000):
 
 
 # This, I borrowed from Claude. Everything else is handwritten
-plt.scatter(x_tensor[:, 0], x_tensor[:, 1], c=y_tensor.ravel(), cmap="viridis")
-plt.xlabel("x1"); plt.ylabel("x2"); plt.colorbar(label="y")
-plt.show()
+with torch.no_grad():
+    w0, w1, b0 = w[0].item(), w[1].item(), b.item()
+
+xs = torch.tensor([x_tensor[:, 0].min(), x_tensor[:, 0].max()])   # left and right edge of the data
+ys = -(w0 * xs + b0) / w1
+
+plt.scatter(x_tensor[:, 0], x_tensor[:, 1], c=y_tensor, s=10)
+plt.plot(xs, ys, "k--")
+plt.ylim(x_tensor[:, 1].min() - 0.5, x_tensor[:, 1].max() + 0.5)   # so a steep line doesn't blow up the axes
+plt.savefig("week1/logreg_boundary.png")

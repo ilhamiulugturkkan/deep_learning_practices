@@ -17,3 +17,5 @@ Update reasons: Took the derivative wrong. Broadcasting caused every point to ha
 
 # 09-08-2026
 ILH-158: Logistic regression task. After linear regression it was pretty easy with autograd. My only problem is comprehending the size of elements that I am working with or my confidency on Torch operations which will be improved as I continue to write code like this exercise. There are not a lot things to mention here. I forgot the cross entropy function and checked it online. I plotted everything with AI (that's what I do). Also, linear regression wouldn't work with this data cuz this data distrbiution is not linear so the parameters of linear reg models wouldn't be enough to learn.
+
+From feedbacks: Storing loss in linreg_autograd was a huge mistake as I was storing a torch entitity. Instead of it from now on I'll use x.item() to store additional things or ops that are nothing to do with model etc.
