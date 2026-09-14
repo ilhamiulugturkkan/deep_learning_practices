@@ -37,3 +37,8 @@ Some things to emphasize:
 - I used 'device' for the first time and the training loop was really slow. Because I had a print function in there and the process was switching between gpu and cpu again and again. After I erased that print, the runtime was almost 3 times faster. 
 - While using NNs there's no need to flatten data by hand nn has a good function for that but we gotta be careful about the shapes of the data.
 - Again I normalized and standardized the data myself. I don't know if there's a funtion for that but it's pretty easy so no problem.
+
+
+About Building makemore part2:
+Embeddings: It's a way to represent anything as vectors. Doing it for chars, words, etc. is pretty impressive. I actually knew this term before but now by thinking the nn structure, it makes MUCH MORE sense.
+PS: I started to guess the next lines of code before Andrej writes it which makes me feel pretty good.

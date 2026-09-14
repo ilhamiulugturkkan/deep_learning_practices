@@ -70,5 +70,3 @@ def test(model):
 
 train(model, dataloader=dataload, epoch=10,optimizer=optimizer,loss_fn=loss_fn )
 test(model)
-
-
