@@ -42,3 +42,6 @@ Some things to emphasize:
 About Building makemore part2:
 Embeddings: It's a way to represent anything as vectors. Doing it for chars, words, etc. is pretty impressive. I actually knew this term before but now by thinking the nn structure, it makes MUCH MORE sense.
 PS: I started to guess the next lines of code before Andrej writes it which makes me feel pretty good.
+
+# 09-14-2026
+Training set is to train parameters, val set is for hyper-parameters, and test set is to evaluate.
