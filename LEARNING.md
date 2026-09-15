@@ -45,3 +45,44 @@ PS: I started to guess the next lines of code before Andrej writes it which make
 
 # 09-14-2026
 Training set is to train parameters, val set is for hyper-parameters, and test set is to evaluate.
+
+Notes on the most important video of Andrej's series (prt 3 of building makemore):
+- Initialization is wrong in bunch of aspects and we can tell it by looking at hte huge difference of loss between the epoc 0 and epoch 10000 (27.9->2.85). We can see this wwhen we plot the loss function by epochs. It looks like a hockey stick.
+
+How to calculate the expected loss value at first?
+for our case the prob of each class initially is 1/27 so the expected loss is -torch.tensor(1/27.0).log()= 3.3.
+
+
+1- With extreme logit values, it is very likely to have a high loss. To minimize the loss initially, we gotta prevent extreme logits and try to make them as close as possible to each other. To make it possible:
+- Init biases as 0 or very small values as we dont need a bias initially.
+- With default init the last layer produces large logits, so the softmax is very peaked on random classes and the initial loss is way above ln(27) ≈ 3.3. The first few hundred steps of training are then wasted just shrinking those logits down, which is the hockey-stick shape at the start of the loss curve. So setting the last layer's weights to very small values is a good idea.
+- 
+
+2- Most of the activations (values of tanh(smh)) are 1.0 or -1.0 or really close to these values initially. We can see it by plotting a histogram of h values. This is extremely bad as it forces the gradient of itself to be 0 cuz when we derivate tanh we can see that values close to 1 or -1's slopes are very close to 0. This is dangerous because under the hood we are killing the self.grad by assigning it ~0 and therefore killing every grad value which are dependent to it. This can lead to never activating neuron problem. So we gotta solve this *'sturated tanh'* problem. The root of the problem is tanh(root). If root values are too extreme then we get this problem. So if root = inputs @ w + b, just make w = w * 0.1 and b = b * 0 or 0.01 etc.
+
+AGAIN: To detect this problem we gotta plot h's (activation values) to see extreme values (1 and -1 for tanh case or 0 and 1 for sigmoid or negative values for ReLU ) and also their inputs to see the reason of these extreme values.
+
+BUT how do we come up with numbers like *0.01 or *0.02 to scale down b's or w's? One thing to notice is when we do x @ w with x and w are normally dist. output's mean doesnt change but its std increases by sqrt(fan_in). When we do w * 5 the std increases much more so it's obvious that we gotta scale down w. ANSWER: we gotta / fan_in**0.5 or smh like that. Luckly pytorch has a good function to init weights wrt this problem called nn.init.kaiming_normal_(tensor, mode='fan_in', nonLinearity='activation func'). Andrej basically divides his weights to the square root of fenin.
+
+
+Hoewever, setting the init weights optimal is not important as it was before thanks to inovations.
+
+## Batch Normalization
+It makes it possible to train deep nns much more reliably. It works. Standardizin tnah(hpreact)'s hpreact. It is a differentiable operation so it's alright. So we calculate the mean and the std of the minibatch and standardize the batch. With this hpreact is unit gaussian which prevents extreme values and helps activation functions to prevent the saturation and dead neurons. 
+
+However, we want hprevact to be unit gaussian only in initialization. Because during the training, we want our values to be approximate to the ground truth values. So we should introduce scale and shift. So we have to scale standardized inputs by some gain and then add a value bias to shift them. We train gain and bias by backpropagating to offset and scale the unit dist.
+So the bottom line is: Standardize and scale before the activation function to get rid of most of the problem that activation functions can cause. We have to keep this attitude while predicting as well.
+This method is very helpful because as the networks gets deeper and deeper it will be very hard to adjust all the weights etc. initially. With batch normalization we are solving this problem inside the network in a generalized way and instead of updating maybe millions of weights we are adding additional parameters to optimize. So with batch normalization we don't need to brainstorm to adjust initial weights.
+*So we just append a batch normalization layer to linear layers to control the scales of the activations (layers that has multiplications).* It also has a regularizing affect which is a side effect.
+So after we're done with training, we might feed the network with a single input and we cannot estimate the mean and std of it. Therefore furing the training, it is a common choice to estimate the general means and std and then using those values while feeding the network with val or test data.
+Some  details: 
+-It is a wise choice to add a small fixed value to add std as it can be zero and lead to a div by zero error.
+- Also adding bias to a layer comes just before a normalization layer is a waste of resource as we subtract it during the normalization. Batch normalization's bias does that job instead of prev layer's bias.
+
+Last Note: This layer is an extremely dangerous layer to play with and causes a lot of bugs. Try to avoid it as much as possible and I believe that much more reliable and optimized techniques are introduced in 3 years (the video is post 3 years ago)
+
+Why we dont want saturation values to shrink to zero? Isnt it good?
+
+We can use plots to keep track of saturation rates, the parameters' grad values, the outputs of tanh's etc. to detect the problems of our network and add additional layers or might want to initialize the weights a little different.
+With update:data ratio plot we can see if our lr is too large or small by comparing the lines with the constant -3 line.
+Bottom line is plotting some attributes of the parameters is a very good way to understand what went wrong and what to do to cure the network.

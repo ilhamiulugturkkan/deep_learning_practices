@@ -34,17 +34,20 @@ y = torch.tensor(y)
 C = torch.randn((27, 10), generator=g, requires_grad=True)
 
 
-W1 = torch.randn((block_size * 10, 200), requires_grad=True, generator=g)
-b1 = torch.randn((200), requires_grad=True, generator=g)
+W1 = torch.randn((block_size * 10, 200), generator=g) * 0.01
+b1 = torch.randn((200), generator=g) * 0
 
-W2 = torch.randn((200, 27), requires_grad=True, generator=g)
-b2 = torch.randn((27), requires_grad=True, generator=g)
+W2 = torch.randn((200, 27), generator=g) * 0.01
+b2 = torch.randn((27), generator=g) * 0
 
 parameters = [C, W1, b1, W2, b2] # optimizer will save us from for loops very soon!
 
+for p in parameters:
+    p.requires_grad = True
+
 lr = 0.1
 
-for i in range(500000):
+for i in range(200000):
 
     if i == 100000:
         lr = 0.01
