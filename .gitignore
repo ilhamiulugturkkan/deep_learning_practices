@@ -4,3 +4,5 @@ week2/mnsit
 REVIEW.md
 wandb.txt
 wandb/
+src/__pycache__
+best_model.pt
