@@ -2,3 +2,5 @@ venv
 .DS_Store
 week2/mnsit
 REVIEW.md
+wandb.txt
+wandb/
