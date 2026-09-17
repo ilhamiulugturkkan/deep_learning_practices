@@ -86,3 +86,7 @@ Why we dont want saturation values to shrink to zero? Isnt it good?
 We can use plots to keep track of saturation rates, the parameters' grad values, the outputs of tanh's etc. to detect the problems of our network and add additional layers or might want to initialize the weights a little different.
 With update:data ratio plot we can see if our lr is too large or small by comparing the lines with the constant -3 line.
 Bottom line is plotting some attributes of the parameters is a very good way to understand what went wrong and what to do to cure the network.
+
+# 09-16-2026
+
+For the last 2 days I've worked on src/train which can be executed with config files. It's a general function to train models and save their parameters. It was kind of a challenge for me but I think I used all the things I've learnt for the last 2 weeks and it was a good review for me. Btw I am trying to understand the traditional ways to implement these kind of scripts therefore I am getting advice from various sources such as docs, internet, and AI. But I use these AFTER I code.
