@@ -89,4 +89,26 @@ Bottom line is plotting some attributes of the parameters is a very good way to 
 
 # 09-16-2026
 
-For the last 2 days I've worked on src/train which can be executed with config files. It's a general function to train models and save their parameters. It was kind of a challenge for me but I think I used all the things I've learnt for the last 2 weeks and it was a good review for me. Btw I am trying to understand the traditional ways to implement these kind of scripts therefore I am getting advice from various sources such as docs, internet, and AI. But I use these AFTER I code.
+For the last 2 days I've worked on src/train which can be executed with config files. It's a general function to train models and save their parameters. It was kind of a challenge for me but I think I used all the things I've learnt for the last 2 weeks and it was a good review for me. Btw I am trying to understand the traditional ways to implement these kind of scripts therefore I am getting advice from various sources such as docs, internet, and AI. But I use these AFTER I code. ALSO, early stopping was a new term for me. It stops the training after loss stops decreasing for 'patience' times. I set patience to 3 in config.
+
+3.2: For this exercise I dropped the early stopping and tried out 6 different configurations and their wandb logs. I logged train_loss, val_loss, and val_accuracy.
+
+Baseline: Nothing to mention. It's the baseline with lr=0.01.
+
+lr*100: With this model's graphs I relaized that 0.01 is a way too small learning rate for this model. Because both losses and accuracies seemed much more better than the baseline. The weird thing was after an epoch, val_loss increased but accuracy continued to increase. When I thought about it and checked it online I saw that this was not a weird thing at all. Because those are differnt metrics, one is binary and one is a lot of multiplication etc.
+
+lr/100: As expected this performed really really bad because our baseline already had a small lr. Maybe for future, it can be a good idea to set lr as 1 and update it to 0.01 close to convergence.
+
+shuffle_false: This was a interesting graph. All of the graphs were very smooth. With shuffling, loss could have a spike or a pit for an epoch or two but with shuffle=False those movements disappeared. Which is logical as the same batches are loaded to the trainer in the same order.
+
+batch_size=2: One of the worst models. All noisy graphs and it takes AGES to converge.
+
+batch_size=4096: Performs the worst for the first epochs but it would perform good if we would increase the epoch number. It is not the best batch size for MNIST dataset as we have a relatively small number of training samples. Because batches helps us to train the model with random samples and unique batches help pur models to converge much better. However when we take the batch 1/4 of the set all the batches have much bigger probability to be much similar. This is one of the most important facts why big batches (relative to the dataset size) doesnt perfom that well. But obviously much less training is the #1 reason of bad performance. AI:"big batches take fewer, more accurate steps per epoch, so at a fixed epoch budget they've simply had less opportunity to update; the standard fix is scaling LR up with batch size, not just running longer." (pff basically the same thing...)
+
+
+3.3:
+Dropout: This technique hurts the performance of the model significantly. Our model has a small amount of neurons and we apllied dropout to the most crowded layer (first layer) with 0.2 rate. That meant a significant amount of the parameters were disabled and the capacity of the model dropped. This was an expected result for me as our model is a baby.
+
+Weight_decay: Weight decay didn't do a lot as we didn't have any overfitting problem and a regularization was not needed at all. With regularization, some of the weights tried to pull to zero even though they were extremely needed and useful. As I said before, even though MNIST dataset is relatively small our model is smaller and dumber therefore it cannot even overfit. So extra regularization hurts the performance.
+
+CosineAnnealingLR: This is an empirically effective technique. Andrej also mentioned it in his video. It increases the performance by starting fast (as init weights are mostly need big updates) and acting careful as the model's weights become more 'fragile'. As said, our model performed its best performance with this technique.
