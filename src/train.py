@@ -13,8 +13,10 @@ def main(config, project):
     device = config.get("device") or (torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu")
     print(f"Using {device} device")
 
+    shuffle = config.get('shuffle', True)
 
-    train_dataload, val_dataload = DATASETS[config['dataset']](64)
+
+    train_dataload, val_dataload = DATASETS[config['dataset']](batch_size=config.get('batch_size', 64), shuffle=shuffle)
 
     print(config['model_args'])
     model = MODELS[config['model']](**config['model_args']).to(device)
@@ -28,6 +30,7 @@ def main(config, project):
 
 
     with wandb.init(project=project, name=config['run_name'], config=config) as run:
+        train_losses = []
         for epoch in range(config["epochs"]):
             for images, labels in train_dataload:
                 images = images.to(device=device)
@@ -36,10 +39,10 @@ def main(config, project):
                 loss = loss_fn(logits, labels)
                 optimizer.zero_grad()
                 loss.backward()
-
+                train_losses.append(loss.item())
                 optimizer.step()
-
-                run.log({"train_loss": loss.item()})
+            train_loss = sum(train_losses) / len(train_losses)
+            run.log({"train_loss": train_loss})
 
             
             val_losses = []
