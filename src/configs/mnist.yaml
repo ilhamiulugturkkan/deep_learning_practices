@@ -1,4 +1,4 @@
-run_name: mnist_mlp_wo_batchnorm
+run_name: mnist_mlp_baseline
 project: DL_exercises
 seed: 7
 model: mlp
@@ -7,8 +7,8 @@ model_args:
   fan_out: 10
 dataset: mnist
 batch_size: 64
-epochs: 10
-lr: 0.01
-patience: 3
-device: null   # null = auto-detect
-shuffle: False
+epochs: 50
+lr: 1
+patience: 50
+device: cpu   # null = auto-detect
+shuffle: True

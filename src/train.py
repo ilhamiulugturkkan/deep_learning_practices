@@ -21,7 +21,9 @@ def main(config, project):
     print(config['model_args'])
     model = MODELS[config['model']](**config['model_args']).to(device)
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr = config['lr'])
+    optimizer = torch.optim.SGD(model.parameters(), lr = config['lr'])#, weight_decay=1e-4)
+    #t_max = config['epochs']
+    #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
 
     start_time = time.perf_counter()
 
@@ -30,8 +32,9 @@ def main(config, project):
 
 
     with wandb.init(project=project, name=config['run_name'], config=config) as run:
-        train_losses = []
+        
         for epoch in range(config["epochs"]):
+            train_losses = []
             for images, labels in train_dataload:
                 images = images.to(device=device)
                 labels = labels.to(device=device)
@@ -43,6 +46,9 @@ def main(config, project):
                 optimizer.step()
             train_loss = sum(train_losses) / len(train_losses)
             run.log({"train_loss": train_loss})
+
+
+            #scheduler.step()
 
             
             val_losses = []
