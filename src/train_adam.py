@@ -41,5 +41,12 @@ p2.grad = grad.clone()
 opt = torch.optim.SGD([p2], lr=0.01, momentum=0.9)
 opt.step()
 
+# torch's
+p4 = w0.clone().requires_grad_(True)
+p4.grad = grad.clone()
+opt = torch.optim.Adam([p4], lr=0.01, betas=(0.9,0.99))
+opt.step()
+
+
 print((p1 - p2).abs().max())   # should be ~0, e.g. 1e-7
-print((p1 - p3).abs().max())   # should be ~0, e.g. 1e-7
+print((p4 - p3).abs().max())   # should be ~0, e.g. 1e-7
