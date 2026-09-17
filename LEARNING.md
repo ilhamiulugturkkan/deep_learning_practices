@@ -112,3 +112,16 @@ Dropout: This technique hurts the performance of the model significantly. Our mo
 Weight_decay: Weight decay didn't do a lot as we didn't have any overfitting problem and a regularization was not needed at all. With regularization, some of the weights tried to pull to zero even though they were extremely needed and useful. As I said before, even though MNIST dataset is relatively small our model is smaller and dumber therefore it cannot even overfit. So extra regularization hurts the performance.
 
 CosineAnnealingLR: This is an empirically effective technique. Andrej also mentioned it in his video. It increases the performance by starting fast (as init weights are mostly need big updates) and acting careful as the model's weights become more 'fragile'. As said, our model performed its best performance with this technique.
+
+# 09-17-2026
+Histograms:
+Weight hists layer: We want to them to start near 0 and expand and then stabilize. 
+Gradient: We want the dist mean to be close to 0 and stable not extreme std.
+Update:Weight Ratio: We want them close to -3.
+
+Throughout the hists, the most text-book hists were lr-0.01's. However we didn't scored the best performance with it. For a small dataset and a model forgiving as MLP, it is pretty casual. Because large lr's can actually find a better minima than small ones. However from the graphs, we understand that lr=0.01 is the most reliable lr and we would want to use it for complex problems and it would probably perform better. Hopefully we'll try this in the future.
+
+## Adam
+Momentum: It basically considers both current and previous movement while updating the weight. It is useful to think the model's loss in a graph. It is dangerous to move based on the current slope only as there can be some noise etc. but considering past too gives us an idea where the loss was heading to. Of course finding a good beta (how much past actions to consider 1/(1-beta)) is critical. We want our model to consider past but also consider the current slope too. SOURCES: it specifically cancels oscillation and amplifies consistent motion
+
+Adam: It's the mixed solution of momentum and RMSprop. We utilize them both and add an additional  (1-b1) to momentum like v = b1 * prev + 1-b1 * current.We apply bias correction to both v and s (divide by 1-beta^t) because both accumulators start at zero, which biases them low for the first several steps — without correction, early updates would be artificially small. Bias correction compensates for exactly this, boosting early updates back to their true scale; as t grows, 1-beta^t approaches 1 and the correction fades out on its own. While momentum prevents oscillation, RMSprop decreases the effect of highly moving grads and stabilizes the grads. 

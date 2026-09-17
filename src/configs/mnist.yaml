@@ -1,4 +1,4 @@
-run_name: mnist_mlp_baseline
+run_name: mnist_mlp_baseline_lr0.01
 project: DL_exercises
 seed: 7
 model: mlp
@@ -8,7 +8,7 @@ model_args:
 dataset: mnist
 batch_size: 64
 epochs: 50
-lr: 1
+lr: 0.01
 patience: 50
 device: cpu   # null = auto-detect
 shuffle: True
