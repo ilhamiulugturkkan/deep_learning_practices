@@ -125,3 +125,61 @@ Throughout the hists, the most text-book hists were lr-0.01's. However we didn't
 Momentum: It basically considers both current and previous movement while updating the weight. It is useful to think the model's loss in a graph. It is dangerous to move based on the current slope only as there can be some noise etc. but considering past too gives us an idea where the loss was heading to. Of course finding a good beta (how much past actions to consider 1/(1-beta)) is critical. We want our model to consider past but also consider the current slope too. SOURCES: it specifically cancels oscillation and amplifies consistent motion
 
 Adam: It's the mixed solution of momentum and RMSprop. We utilize them both and add an additional  (1-b1) to momentum like v = b1 * prev + 1-b1 * current.We apply bias correction to both v and s (divide by 1-beta^t) because both accumulators start at zero, which biases them low for the first several steps — without correction, early updates would be artificially small. Bias correction compensates for exactly this, boosting early updates back to their true scale; as t grows, 1-beta^t approaches 1 and the correction fades out on its own. While momentum prevents oscillation, RMSprop decreases the effect of highly moving grads and stabilizes the grads. 
+
+# 09-18-2026
+
+## CNN
+Assumption: input type is image. Therefore we can add some properties and make forward process more efficient and reduce learnable parameter count. Other than that it is nearly the same as regular neural networks that I dealt with for the last 2 weeks. Assigning a neuron to every single input especially for images is pretty waseful. Images generally have larger number of inputs as they have vertical and horizontal pixel numbers * RGB values (height, width, depth). Therefore we can take advantage of knowing the input array type and its fundamentals.
+
+Three main types of layers: Convolutional, Pooling, and Fully-Connected. We'll stack these layers. While convolutional and fully-connected layers perform transformations that are a function of not only the activations (values after the activation function/layer) in the input volume, but also of the parameters; RELU and Pool layers implement a fixed function. So the parameters in convolutional and fuilly-connected layers will be trained. Each layer accepts an input 3D volume and transforms it to an output 3D volume through a differentiable func.
+
+### Convolutional Layer:
+MOst heavy computations are done by this guy. Here, we have a set of learnable FILTERS. Each filter has a a width and height, and extends through the full depth of the input volume. So, if the input volume has a depth 3 a filter's shape may be (h,w,3). During the forward pass we slide each filter across the input volume  and compute DOT PRODUCTS between the entries of the filter and the input at any position. As we slide a filter, we produce a 2d activation map. Then we stack all teh filters and get a 3d volume. So we are connecting each neuron to only a local region of the input volume. The spatial extent of this connectivity is a hyperparameter called the receptive field of the neuron (equivalently this is the filter size).
+
+So let's say we now fitler size etc. How many neurons are there in the output volume or how they are arranged? They depend on some hyperparameters such as DEPTH, STRIDE, and ZERO-PADDING.
+
+DEPTH: Depth of the output volume is a hyperparameter. It corresponds to the filter count that we have each learning to look something different in the input. Some filters may be learning edges and some may be learning colors etc. We will call the neurons looking to the same region of the input as DEPTH COLUMN.
+
+STRIDE: The amount of how many pixels we slide the filter each step. If stride is 1, we slide the filter one-by-one. If it's 2, we jump 2 pixels etc.
+
+ZERO-PADDING: Sometimes it is efficient to pad the input volume with zeros like a frame around the border. The size of it is a hyperparameter. As we can be seen on figures etc. in Google or smh, the edges of the image can be learnt only one time while other pixels are learnt by filters multiple times. Therefore can be a good implementation to pad the input and therefore 'scan' the edges by multiple neurons (filter 'scans' it multiple times). Also a common useage: In general, setting zero padding to be P=(F−1)/2 when the stride is S=1 ensures that the input volume and output volume will have the same size spatially.
+
+We can compute the output spatial size with given input size (W), filter size (F), stide (S) and zero-padding (P) with: (W - F + 2P)/(S) + 1
+
+PARAMETER SHARING: We constrain the neurons in each depth slice to use the same weights and bias. So regardless of the input size let's say we have a 5x5 filter. Our learnable parameters size is 5 * 5 * 3 (weights of each pixel the filter can scan)+1(bias)=76. If we have depth 5 then the learnable parameter number is 76 * 5 = 380. Notice that if all neurons in a single depth slice are using the same weight vector, then the forward pass of the CONV layer can in each depth slice be computed as a convolution of the neuron’s weights with the input volume (Hence the name: Convolutional Layer). This is why it is common to refer to the sets of weights as a filter (or a kernel), that is convolved with the input. SO all the neurons in a depth slice shares the same parameters (weights and bias) and when we think about a filter (say 5x5) and an image (say 27x27x3) we know that our filters can get info from 5x5x3 pixels and it has a bias so the learnable parameter count estimation is pretty easy. This sharing technique is very effective when we think like if a filter learns some feature in x,y it should be able to learn the same thing in x2,y2. But it doesnt work that well if the image has a specific centered structure (a portrait of a face). In this case we should relax the constraint and call the layer a locally-connected layer(?).
+
+Calculation (READ CAREFUL)
+1-The local regions in the input image are stretched out INTO COLUMNS in an operation commonly called im2col. For example, if the input is [227x227x3] and it is to be convolved with 11x11x3 filters at stride 4, then we would take [11x11x3] blocks of pixels in the input and stretch each block into a column vector of size 11* 11 * 3 = 363. Iterating this process in the input at stride of 4 gives (227-11)/4+1 = 55 locations along both width and height, leading to an output matrix X_col of im2col of size [363 x 3025], where every column is a stretched out receptive field and there are 55*55 = 3025 of them in total. Note that since the receptive fields overlap, every number in the input volume may be duplicated in multiple distinct columns.
+2- The weights of the CONV layer are similarly stretched out INTO ROWS. For example, if there are 96 filters of size [11x11x3] this would give a matrix W_row of size [96 x 363].
+3- The result of a convolution is now equivalent to performing one large matrix multiply np.dot(W_row, X_col), which evaluates the dot product between every filter and every receptive field location. In our example, the output of this operation would be [96 x 3025], giving the output of the dot product of each filter at each location.
+4- The result must finally be reshaped back to its proper output dimension [55x55x96].
+
+### Pooling Layer
+It is used to reduce the spatial size of the representation to reduce the number of learnable parameters (also controls overfitting). Pooling layer operates independently on each depth slice and reduces the size by using MAX funvction. 
+
+It is worth noting that there are only two commonly seen variations of the max pooling layer found in practice: A pooling layer with F=3,S=2 (also called overlapping pooling), and more commonly F=2,S=2. Pooling sizes with larger receptive fields are too destructive.
+
+General pooling. In addition to max pooling, the pooling units can also perform other functions, such as average pooling or even L2-norm pooling. Average pooling was often used historically but has recently fallen out of favor compared to the max pooling operation, which has been shown to work better in practice.
+
+It has a decreasing popularity as people start to use larger stride values instead of pooling layers.  Discarding pooling layers has also been found to be important in training good generative models, such as variational autoencoders (VAEs) or generative adversarial networks (GANs) too.
+
+Some advices:
+Prefer a stack of small filter CONV to one large receptive field CONV layer. 
+
+Intuitively, stacking CONV layers with tiny filters as opposed to having one CONV layer with big filters allows us to express more powerful features of the input, and with fewer parameters. As a practical disadvantage, we might need more memory to hold all the intermediate CONV layer results if we plan to do backpropagation.
+
+“don’t be a hero”: Instead of rolling your own architecture for a problem, you should look at whatever architecture currently works best on ImageNet, download a pretrained model and finetune it on your data. You should rarely ever have to train a ConvNet from scratch or design one from scratch.
+
+Second, if we suppose that all the volumes have C
+ channels, then it can be seen that the single 7x7 CONV layer would contain C×(7×7×C)=49C2
+ parameters, while the three 3x3 CONV layers would only contain 3×(C×(3×3×C))=27C2
+ parameters.??????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+
+ # 09-19-2026
+ Cont'
+ Common sizes: 
+ input must be divisable to 2
+ filter size must be small (commonly 3x3, at most 5x5) using stride 1
+ Padding the input volume with zeros in such way that the conv layer does not alter the spatial dimensions of the input. That is, when F=3, then using P=1 will retain the original size of the input. When F=5, P=2. For a general F, it can be seen that P=(F−1)/2 preserves the input size.
+
+To sum up, we would like to leave the job of downsizing to POOL layers and would like conv layer to preserve the input size. It is very common to use F=2, S=2 POOL layers. Using F>3 is very uncommong as we lose significant amount of info.
