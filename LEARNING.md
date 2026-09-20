@@ -180,3 +180,6 @@ Second, if we suppose that all the volumes have C channels, then it can be seen 
  Padding the input volume with zeros in such way that the conv layer does not alter the spatial dimensions of the input. That is, when F=3, then using P=1 will retain the original size of the input. When F=5, P=2. For a general F, it can be seen that P=(F−1)/2 preserves the input size.
 
 To sum up, we would like to leave the job of downsizing to POOL layers and would like conv layer to preserve the input size. It is very common to use F=2, S=2 POOL layers. Using F>3 is very uncommong as we lose significant amount of info.
+
+## First coding exercise errk4/conv_numpy.py
+im2col is OP! I am proud of what I implemented by just looking at LEARNING.md! I just got some help from Claude when I increased the image_count and I'm glad I did cuz I wouldn't solve that. I think adding image_count was a little extra so I don't worry that much. It was a fun exercise. I also feel pretty good as I can easily understand the shape of everything and do matmuls or reshape (With axis=) operations with much less error.
