@@ -1,4 +1,4 @@
-run_name: cnn_augmentation
+run_name: cnn_cosLR
 project: CIFAR-10
 seed: 7
 model: cnn

@@ -26,8 +26,8 @@ def main(config, project):
     loss_fn = nn.CrossEntropyLoss()
 
     optimizer = torch.optim.SGD(model.parameters(), lr = config['lr'], momentum=0.9)#, weight_decay=5e-4)
-    #t_max = config['epochs']
-    #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
+    t_max = config['epochs']
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
 
     start_time = time.perf_counter()
 
@@ -78,7 +78,7 @@ def main(config, project):
             run.log({"train_loss": train_loss})
 
 
-            #scheduler.step()
+            scheduler.step()
 
             
             val_losses = []
