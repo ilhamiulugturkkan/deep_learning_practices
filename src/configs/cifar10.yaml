@@ -1,4 +1,4 @@
-run_name: cnn_baseline
+run_name: cnn_augmentation
 project: CIFAR-10
 seed: 7
 model: cnn

@@ -19,7 +19,9 @@ def get_mnist(batch_size, shuffle):
 
 def get_cifar(batch_size=64, shuffle=True):
     transform = torchvision.transforms.Compose([
-        torchvision.transforms.ToTensor()
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.RandomCrop(32, padding=4),
+        torchvision.transforms.RandomHorizontalFlip(),
     ])
     train_data = torchvision.datasets.CIFAR10(root='./src/data', train=True, download=True, transform=transform)
 

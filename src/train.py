@@ -25,7 +25,7 @@ def main(config, project):
 
     loss_fn = nn.CrossEntropyLoss()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr = config['lr'], momentum=0.9)#, weight_decay=1e-4)
+    optimizer = torch.optim.SGD(model.parameters(), lr = config['lr'], momentum=0.9)#, weight_decay=5e-4)
     #t_max = config['epochs']
     #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
 
