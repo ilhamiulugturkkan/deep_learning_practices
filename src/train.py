@@ -15,15 +15,17 @@ def main(config, project):
     device = config.get("device") or (torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu")
     print(f"Using {device} device")
 
-    shuffle = config.get('shuffle', True)
 
-
-    train_dataload, val_dataload = DATASETS[config['dataset']](batch_size=config.get('batch_size', 64), shuffle=shuffle)
+    train_dataload, val_dataload = DATASETS[config['dataset']](batch_size=config.get('batch_size', 64), shuffle = config.get('shuffle', True))
+    print(train_dataload)
+    print(val_dataload)
 
     print(config['model_args'])
     model = MODELS[config['model']](**config['model_args']).to(device)
+
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr = config['lr'])#, weight_decay=1e-4)
+
+    optimizer = torch.optim.SGD(model.parameters(), lr = config['lr'], momentum=0.9)#, weight_decay=1e-4)
     #t_max = config['epochs']
     #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
 
@@ -40,8 +42,6 @@ def main(config, project):
             for images, labels in train_dataload:
                 images = images.to(device=device)
                 labels = labels.to(device=device)
-                logits = model(images)
-
                 logits = model(images)
 
                 loss = loss_fn(logits, labels)
@@ -73,7 +73,7 @@ def main(config, project):
                     "update_ratio_layer2": ratio2,
                 })
                 
-            break
+
             train_loss = sum(train_losses) / len(train_losses)
             run.log({"train_loss": train_loss})
 
@@ -102,7 +102,7 @@ def main(config, project):
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 patience_counter = 0
-                torch.save(model.state_dict(), "best_model.pt")   # checkpoint
+                torch.save(model.state_dict(), "best_model_cnn.pt")   # checkpoint
             else:
                 patience_counter += 1
                 if patience_counter >= config["patience"]:
