@@ -1,0 +1,13 @@
+run_name: cnn_baseline
+project: CIFAR-10
+seed: 7
+model: cnn
+model_args:
+  device: mps
+dataset: cifar10
+batch_size: 64
+epochs: 30
+lr: 0.01
+patience: 50
+device: mps   # null = auto-detect
+shuffle: True
