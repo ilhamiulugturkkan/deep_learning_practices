@@ -7,3 +7,4 @@ wandb/
 src/__pycache__
 src/data
 best_model.pt
+*/__pycache__
