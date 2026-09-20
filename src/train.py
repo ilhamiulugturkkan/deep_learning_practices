@@ -48,7 +48,7 @@ def main(config, project):
                 optimizer.zero_grad()
                 loss.backward()
 
-                w1 = model.seq[0].weight          # (128, 784)
+                '''w1 = model.seq[0].weight          # (128, 784)
                 g1 = model.seq[0].weight.grad     # same shape, populated by backward()
                 w2 = model.seq[3].weight
                 g2 = model.seq[3].weight.grad
@@ -61,17 +61,17 @@ def main(config, project):
                 run.log({
                     "grad_hist_layer1": wandb.Histogram(g1.detach().cpu().numpy()),
                     "grad_hist_layer2": wandb.Histogram(g2.detach().cpu().numpy()),
-                })
+                })'''
                 train_losses.append(loss.item())
                 optimizer.step()
 
-                ratio1 = np.log10((config['lr'] * g1.std().item()) / w1.std().item())
+                '''ratio1 = np.log10((config['lr'] * g1.std().item()) / w1.std().item())
                 ratio2 = np.log10((config['lr'] * g2.std().item()) / w2.std().item())
 
                 run.log({
                     "update_ratio_layer1": ratio1,
                     "update_ratio_layer2": ratio2,
-                })
+                })'''
                 
 
             train_loss = sum(train_losses) / len(train_losses)
