@@ -186,3 +186,11 @@ im2col is OP! I am proud of what I implemented by just looking at LEARNING.md! I
 
 # 09-20-2026
 I added CNN model and CIFAR10 dataloader to the src/ and then trained 6 models. Baseline, model with batch norm after every conv, model that is trained with augmented data, training with weight decay, and training with cosine LR schedule and lastly, all of them together.
+
+Base model achieved ~70 accuracy after 30 epochs. It has 3 conv,relu,pool layers and a fc layer at the end.
+
+Batch norm (normalizes activation so that not activation explosion happens even if weight become too large during training) and augmentation improved the model performance really well. I already knew that both of them were used for generalization and to prevent overfitting. They both achieved ~77 accuracy in 30 epochs which is pretty awsome. From there, I understood that generalization in CNNs are crucial.
+
+Weight decay and cosLR achieved slightly better performance than the baseline with ~72 accuracy. They were pretty ineffective for MLP in fact they decreased the accuracy of the model back then. weight decay only helps when there's overfitting to counteract; my MLP had too little capacity to overfit, so weight decay was pure harm, while the CNN has enough capacity that overfitting is real and weight decay earns its keep. I can see that as the epcoh and learnable parameter counts increase their affect will be much more observable.
+
+Lastly I used all of them and trained the CNN for 30 epochs. The model achieved ~81 accuracy and I suspect that the epoch was the bottleneck ther because in the graphs I can see that val loss is still dropping and accuracy is still increasing. I had 2 techniques to prevent overfitting and 2 techniques that are effective as the epoch and the parameter count goes up. Therefore I think if I trained the model much more those techniques would pay much more.
