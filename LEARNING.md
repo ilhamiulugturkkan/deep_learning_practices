@@ -183,3 +183,6 @@ To sum up, we would like to leave the job of downsizing to POOL layers and would
 
 ## First coding exercise errk4/conv_numpy.py
 im2col is OP! I am proud of what I implemented by just looking at LEARNING.md! I just got some help from Claude when I increased the image_count and I'm glad I did cuz I wouldn't solve that. I think adding image_count was a little extra so I don't worry that much. It was a fun exercise. I also feel pretty good as I can easily understand the shape of everything and do matmuls or reshape (With axis=) operations with much less error.
+
+# 09-20-2026
+I added CNN model and CIFAR10 dataloader to the src/ and then trained 6 models. Baseline, model with batch norm after every conv, model that is trained with augmented data, training with weight decay, and training with cosine LR schedule and lastly, all of them together.
