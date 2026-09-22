@@ -7,7 +7,7 @@ import torch.nn as nn
 
 def main():
     device = (torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu")
-
+    print(device)
     weights = ResNet50_Weights.DEFAULT
     preprocess = weights.transforms()  # returns the exact transform pipeline used in training
 
@@ -64,7 +64,6 @@ def main():
         train_losses = []
         model.train()
         for images, labels in train_dataload:
-            print(images.shape)
             images = images.to(device=device)
             labels = labels.to(device=device)
             logits = model(images)
