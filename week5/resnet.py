@@ -44,8 +44,8 @@ def main():
     train, val = random_split(train_data, [train_size, val_size])
 
 
-    train_dataload = DataLoader(train, batch_size=64, shuffle=True,  num_workers=4)
-    val_dataload = DataLoader(val, batch_size=64, shuffle=True,  num_workers=4)
+    train_dataload = DataLoader(train, batch_size=256, shuffle=True,  num_workers=2)
+    val_dataload = DataLoader(val, batch_size=256, shuffle=True,  num_workers=2)
 
     print('CIFAT data is loaded to dataloaders')
 
