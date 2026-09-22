@@ -49,8 +49,8 @@ def main():
     val = torch.utils.data.Subset(val_data, val_idx)
 
 
-    train_dataload = DataLoader(train, batch_size=256, shuffle=True,  num_workers=2)
-    val_dataload = DataLoader(val, batch_size=256, shuffle=True,  num_workers=2)
+    train_dataload = DataLoader(train, batch_size=768, shuffle=True,  num_workers=2)
+    val_dataload = DataLoader(val, batch_size=768, shuffle=True,  num_workers=2)
 
     print('CIFAT data is loaded to dataloaders')
 
