@@ -21,10 +21,7 @@ def main():
     print('Parameters are frozen')
 
     model.fc = nn.Sequential(
-        nn.Linear(2048, 512),
-        nn.BatchNorm1d(512),
-        nn.ReLU(),
-        nn.Linear(512, 10),
+        nn.Linear(2048, 10),
     )
 
     model = model.to(device=device)
@@ -35,6 +32,7 @@ def main():
         torchvision.transforms.ToTensor(),
         torchvision.transforms.RandomCrop(32, padding=4),
         torchvision.transforms.RandomHorizontalFlip(),
+        preprocess
     ])
     train_data = torchvision.datasets.CIFAR10(root='./src/data', train=True, download=True, transform=transform)
 
@@ -66,7 +64,7 @@ def main():
         train_losses = []
         model.train()
         for images, labels in train_dataload:
-            images = preprocess(images)
+            print(images.shape)
             images = images.to(device=device)
             labels = labels.to(device=device)
             logits = model(images)
