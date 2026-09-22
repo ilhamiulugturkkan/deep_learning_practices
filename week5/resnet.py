@@ -34,12 +34,19 @@ def main():
         torchvision.transforms.RandomHorizontalFlip(),
         preprocess
     ])
+    val_transform = torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
+        preprocess
+    ])
     train_data = torchvision.datasets.CIFAR10(root='./src/data', train=True, download=True, transform=transform)
+    val_data = torchvision.datasets.CIFAR10(root='./src/data', train=True, download=True, transform=val_transform)
 
     train_size = int(len(train_data) * 0.8)
-    val_size = int(len(train_data)) - train_size
 
-    train, val = random_split(train_data, [train_size, val_size])
+    indices = torch.randperm(len(train_data))
+    train_idx, val_idx = indices[:train_size], indices[train_size:]
+    train = torch.utils.data.Subset(train_data, train_idx)
+    val = torch.utils.data.Subset(val_data, val_idx)
 
 
     train_dataload = DataLoader(train, batch_size=256, shuffle=True,  num_workers=2)
@@ -51,7 +58,7 @@ def main():
 
     loss_fn = nn.CrossEntropyLoss()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr = 0.1, momentum=0.9, weight_decay=5e-4)
+    optimizer = torch.optim.SGD(model.fc.parameters(), lr = 0.1, momentum=0.9, weight_decay=5e-4)
     t_max = EPOCH
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
 
