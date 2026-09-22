@@ -16,12 +16,16 @@ def main():
 
     # Freeze the backbone
     for p in model.parameters():
-        p.requires_grad_(False)
+        p.requires_grad_(True)
 
-    print('Parameters are frozen')
+    print('Parameters are not frozen')
 
     model.fc = nn.Sequential(
-        nn.Linear(2048, 10),
+        nn.Linear(2048, 512),
+        nn.BatchNorm1d(512),
+        nn.ReLU(),
+        nn.Linear(512, 10)
+
     )
 
     model = model.to(device=device)
@@ -49,8 +53,8 @@ def main():
     val = torch.utils.data.Subset(val_data, val_idx)
 
 
-    train_dataload = DataLoader(train, batch_size=768, shuffle=True,  num_workers=2)
-    val_dataload = DataLoader(val, batch_size=768, shuffle=True,  num_workers=2)
+    train_dataload = DataLoader(train, batch_size=64, shuffle=True,  num_workers=2)
+    val_dataload = DataLoader(val, batch_size=64, shuffle=True,  num_workers=2)
 
     print('CIFAT data is loaded to dataloaders')
 
@@ -58,7 +62,20 @@ def main():
 
     loss_fn = nn.CrossEntropyLoss()
 
-    optimizer = torch.optim.SGD(model.fc.parameters(), lr = 0.1, momentum=0.9, weight_decay=5e-4)
+    for p in model.parameters():
+        p.requires_grad_(True)
+
+    backbone_params = [p for name, p in model.named_parameters() if not name.startswith('fc.')]
+    head_params = model.fc.parameters()
+
+    head_lr = 0.1
+    backbone_lr = 0.1 * head_lr  # = 0.01, matches your ratio
+
+    optimizer = torch.optim.SGD([
+        {'params': backbone_params, 'lr': backbone_lr},
+        {'params': head_params, 'lr': head_lr},
+    ], momentum=0.9, weight_decay=5e-4)
+    
     t_max = EPOCH
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
 

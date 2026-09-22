@@ -203,3 +203,14 @@ PyTorch: We can load pretrained models with PyTorch like model = resnet50(weight
 Also we can freeze parameters by setting their require_grad to False and replace the head of the model by doing model.fc = 'our desired head'. Since the newly replaced head require_grad is True by default, replacing the head after freezing all the parameters in ResNet is a common way of transfer leraning (feature extraction. used when dataset is small and similar to pretrained model's training data.). That way we can use a pre-trained model and tune it sometime to utilize it for our purpose. (If we were doing fine-tuning than we would unfreeze all the backbone and train everything.)
 
 So far I've tried to understand the logic of the ResNet, and examined some examples that loads pretrained ResNet models.
+
+# 09-22-2026
+
+I've imported the pre-trained ResNet50 weights played with it using CIFAR10.
+
+First I froze all the parameters and updated it the pre-trained model's head with nn.Linear(2048, 10) so that I could train the model for CIFAR10. Then I imported the CIFAR10 data and transformed it to fit to ResNet layers. That fit included resizing the shape of the image to 224x224. 10 epochs training took ~30 mins and I achieved maximum of 80% accuracy. I tried to increase the accuracy by adding more layers to the FC but it didn't work out which meant the bottleneck isn't the FC. The parameters in the backbone need some updates specific to CIFAR10. 
+Then I tried to exclude reshaping from the transforms to keep the accuracy and shorten the training time but accuracy dropped significantly. I am not sure what does ResNet do when it recieves smaller input so I have no comments on that.
+
+Secondly, I unfroze everything and replace FC again. I fine-tuned model for 10 epochs with seperate LR's for backbone and head. This time training took much more time (~70 mins) but accuracy rised significantly to ~97% which is amazing.
+
+Lastly, I've saved the best model's weights.
