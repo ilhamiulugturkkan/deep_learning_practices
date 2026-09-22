@@ -8,4 +8,4 @@ src/__pycache__
 src/data
 best_model.pt
 */__pycache__
-best_model_Resnet.pt
+best_model_resnet.pt
