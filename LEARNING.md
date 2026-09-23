@@ -214,3 +214,7 @@ Then I tried to exclude reshaping from the transforms to keep the accuracy and s
 Secondly, I unfroze everything and replace FC again. I fine-tuned model for 10 epochs with seperate LR's for backbone and head. This time training took much more time (~70 mins) but accuracy rised significantly to ~97% which is amazing.
 
 Lastly, I've saved the best model's weights.
+
+# 09-23-2026
+
+I redid my dog breed classifier project's resnet part again. I got a 91.4% accuracy score which beat my prev SOTA. I think it's because of the way I've implemented the model. Previously I was using the same LR value for noth the backbone and head parameters which was a mistake because of the fact that backbone params are pretrained with images already. I also printed the Confusin Matrix and saw that the class 1 adn 22 are the problematic ones. They were confused a lot previously as well. Well both american pitbull terrier and staffordshire bull terrier are scary and it is hard to tell which one is which for me as well. So I am not that surprised. 
