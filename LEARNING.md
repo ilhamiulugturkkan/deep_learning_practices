@@ -218,3 +218,32 @@ Lastly, I've saved the best model's weights.
 # 09-23-2026
 
 I redid my dog breed classifier project's resnet part again. I got a 91.4% accuracy score which beat my prev SOTA. I think it's because of the way I've implemented the model. Previously I was using the same LR value for noth the backbone and head parameters which was a mistake because of the fact that backbone params are pretrained with images already. I also printed the Confusin Matrix and saw that the class 1 adn 22 are the problematic ones. They were confused a lot previously as well. Well both american pitbull terrier and staffordshire bull terrier are scary and it is hard to tell which one is which for me as well. So I am not that surprised. 
+
+## Week 6: RNN & LSTM 
+
+RNNs passes hte previous information to the nn. They are networks with loops in them.
+
+They inherit the info but how much info? Sometimes the needed info for the next output can be pretty close to us (maybe 3 or 4 words) but sometimes the gap is pretty large and we need a large history of outputs to generate an accurate output. As the gap grows RNN become pretty useless in practice.
+
+LSTMs (Long short term memory) solve this problem. They are a special kind of RNN and capable of learning long-term dependencies. Remembering information for long periods of time is practically their default behavior.
+
+All recurrent neural networks have the form of a chain of repeating modules of neural network. In standard RNNs, this repeating module will have a very simple structure, such as a single tanh layer. (like h(t) <- tanh(concat(h(t-1), x(t))))
+
+On the other hand, LSTMs have a relatively more complex structure. Instead of having a single neural network layer, there are four, interacting in a very special way.
+
+### The core idea behind LSTMs
+
+The key to LSTMs is the cell state, the horizontal line running through the top of the diagram (see an image in web if you don't remember it). All the operations are done to decide how much info to keep of the prev cell state, what to add additionally.
+
+The first step in LSTM is the 'forget gate layer', here we multiply the prev cell state with the output of sigmoid(W[h(T-1),x(t)] + B). Sigmoid gives a value between 0 and 1. If the output is 1 it means 'teh prev info is so important keep it' and if it's 0 we just say 'forget it'.
+
+The next steps can be understood by looking at hte great visualizations https://colah.github.io/posts/2015-08-Understanding-LSTMs/ provided. It is pretty hard to explain it without the vis. Definetely read that blog again if you forget anything about LSTMs.
+
+If training vanilla neural nets is optimization over functions, training recurrent nets is optimization over programs.
+
+even if your data is not in form of sequences, you can still formulate and train powerful models that learn to process it sequentially. You’re learning stateful programs that process your fixed-sized data.
+
+RNNs are neural networks and everything works monotonically better (if done right) if you put on your deep learning hat and start stacking models up like pancakes. In other words we have two separate RNNs: One RNN is receiving the input vectors and the second RNN is receiving the output of the first RNN as its input. Except neither of these RNNs know or care - it’s all just vectors coming in and going out, and some gradients flowing through each module during backpropagation.
+
+# 09-24-2026
+
