@@ -247,3 +247,17 @@ RNNs are neural networks and everything works monotonically better (if done righ
 
 # 09-24-2026
 
+Off-day
+
+# 09-25-2026
+
+Off-day
+
+# 09-26-2025
+
+Off-day
+
+# 09-27-2026
+
+Started to implement RNN from scratch. It's a bit hard because I know how RNN's work but I really struggle to visualize the code structure in my mind. I implemented the RNNCell without a problem but when dataloaders etc. are included to the equation, I started to have a tough time. But no worries, I am on it.
+
