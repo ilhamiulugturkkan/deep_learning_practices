@@ -6,7 +6,7 @@ import torch.nn.functional as F
 torch.manual_seed(7)
 
 def buildStoi():
-    data = open('/Users/ilhamiulugturkkan/Desktop/deep_learning_practices/corpus.txt', 'r').read()
+    data = open('/Users/ilhamiulugturkkan/Desktop/deep_learning_practices/src/data/corpus.txt', 'r').read()
     all_chars = sorted(list(set(data)))
     itoc = {}
     stoi = {}
@@ -93,7 +93,7 @@ class RNNScratch(nn.Module):
                 
 total_epoch = 5
 seq_len = 64
-datas = TextSet('/Users/ilhamiulugturkkan/Desktop/deep_learning_practices/corpus.txt', seq_length=seq_len)
+datas = TextSet('/Users/ilhamiulugturkkan/Desktop/deep_learning_practices/src/data/corpus.txt', seq_length=seq_len)
 dl = DataLoader(dataset=datas,batch_size=64, shuffle=True)
 model = RNNScratch(datas.vocab_size, 1024, 256)
 optimizer = torch.optim.SGD(model.parameters(),lr=0.1, momentum=0.9)
