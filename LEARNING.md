@@ -262,3 +262,41 @@ Off-day
 Started to implement RNN from scratch. It's a bit hard because I know how RNN's work but I really struggle to visualize the code structure in my mind. I implemented the RNNCell without a problem but when dataloaders etc. are included to the equation, I started to have a tough time. But no worries, I am on it.
 
 I spent some time on RNNScratch and I think I did a lot. First, I finally understood the logic of dataloaders because I implemented one myself. Then I continued step-by-step and implemented the RNNCell which is the smallest component of the RNN structure that I am building. Then I implemented the RNN scratch which takes data from the dataloader, embeds the chars and processes it with RNNCell and lastly outputs a vocab_size vector. I had some difficulties with understanding the general structure and some shape manipulations. I think misunderstanding the general structure was because I had 3 days off and forgot most of the RNN implmentation details. However shape problems are pretty bad as I need to be comfortable with torch shapes by now.
+
+# 09-28-2026
+
+I've finished the training code. Also, I added a sampler as well. Then I fed the model with Monte Cristo and generated sample text wit hlength 500. Temperature matter a lot with the results. With temp 0.5 I got very good structured results but with temp 1.5 I got some weird words such as V02αnBt.
+
+Of course the purpose of this task was not to just implemnet smh and sample from it. I learnt from my mistakes such as:
+
+-> I tried to sample by feeding all the generated chars but my model was trained to get at most 64 of the history. So I started to feed the model with outputs[:, -64:]. Which improved the model's performance.
+
+-> I've disgard all the redundant batches and adjusted my dataloader's getitem function to stride as seq_length. This improved the training time a lot and training loss didn't increased.
+
+-> From my experience, I set all the weights woth randn and multiplied them with 0.01. While training I didn't have the exploiding grad problem even without clipping the gradients.
+
+Lastly I couldn't understand what clip_grad_norm_ was returning so I asked Claude. I think grad_norm is a great way to check how's model doing 'roughly' . It doesn't give the exact answer but if something is awfully wrong we can easily see it from grad_norm. However we shouldn't rely on it too much as it can be deceiving as well. I would like to write my understanding of grad_norm but I think Claude gave me a pretty good summary, so here it is:
+
+Every parameter (W_xh, W_hh, b_h, embeddings, output layer — thousands of individual
+numbers) gets its own gradient after backward(). clip_grad_norm_ flattens ALL of them
+across the whole model into one giant vector and takes its L2 norm (sqrt of sum of
+squares) — one number summarizing "how big is the total update about to be, across
+every weight in the model."
+
+If total_norm > max_norm, every gradient gets rescaled by (max_norm / total_norm),
+same direction, smaller step. Calling it with max_norm=inf clips nothing — it's a
+read-only probe to just observe the norm.
+
+What to read from it: huge + spiky → exploding risk. Near-zero + flat → vanishing,
+barely learning. My RNN (seq_len=64, lr=0.1) stayed stable at ~0.5–0.78 the whole
+run — no explosion, no clipping needed.
+
+**Caveat (the important part):** a healthy aggregate norm does NOT rule out
+vanishing along the time axis. It's a sum over every parameter's gradient, including
+all 64 timesteps' contributions to W_hh. Late-timestep contributions (closer to the
+loss, pass through the W_hh product fewer times) can dominate the sum and hide
+early-timestep contributions that are near zero (passed through the product ~63
+times). The aggregate can't tell "everything's medium" apart from "half are huge,
+half are ~0." Confirming vanishing for real means comparing gradient magnitude at
+individual timesteps, not just the total.
+

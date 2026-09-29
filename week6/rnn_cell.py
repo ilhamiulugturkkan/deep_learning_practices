@@ -2,6 +2,21 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
+
+torch.manual_seed(7)
+
+def buildStoi():
+    data = open('/Users/ilhamiulugturkkan/Desktop/deep_learning_practices/corpus.txt', 'r').read()
+    all_chars = sorted(list(set(data)))
+    itoc = {}
+    stoi = {}
+    for i, c in enumerate(all_chars):
+        itoc[i] = c
+        stoi[c] = i
+    return stoi, itoc
+
+stoi, itoc = buildStoi()
+
 class TextSet(Dataset):
     def __init__(self, path, seq_length):
         data = open(path, 'r').read()
@@ -19,10 +34,11 @@ class TextSet(Dataset):
         self.seq_length = seq_length
 
     def __len__(self):
-        return len(self.data) - self.seq_length
+        return (len(self.data) - seq_len - 1) // seq_len
 
     def __getitem__(self, index):
-        return self.data[index:index + self.seq_length], self.data[index + 1:index + self.seq_length + 1]
+        s = index * seq_len
+        return self.data[s:s + self.seq_length], self.data[s + 1:s + self.seq_length + 1]
 
 class RNNCell(nn.Module):
 
@@ -59,14 +75,46 @@ class RNNScratch(nn.Module):
             y_preds = self.out(prev)
             outputs.append(y_preds)
         return torch.stack(outputs, dim=1)
-                
 
-seq_len = 8
+    def sample(self, seed, sample_size ,temp=1):
+        self.eval()
+        seed_idx = torch.tensor([stoi[c] for c in seed], dtype=torch.long)
+        seed_idx = seed_idx.reshape(1, seed_idx.shape[0])
+        with torch.no_grad():
+            for i in range(sample_size):
+                preds = self.forward(seed_idx[:, -64:])
+                logits = torch.softmax(preds[0,-1,:] / temp, dim=0)
+                taken = torch.multinomial(logits, 1, False).reshape(1,-1)
+                seed_idx = torch.concat([seed_idx, taken], dim=1)
+                seed = seed + itoc[taken.item()]
+
+        self.train()
+        return seed
+                
+total_epoch = 5
+seq_len = 64
 datas = TextSet('/Users/ilhamiulugturkkan/Desktop/deep_learning_practices/corpus.txt', seq_length=seq_len)
-dl = DataLoader(dataset=datas,batch_size=64, shuffle=False)
-rnn_scratch = RNNScratch(datas.vocab_size, 64, 16)
-for x, y in dl:
-    y_preds = rnn_scratch(x)
-    print(y_preds.shape) # list with len 8 and and element shape are (64, vocab_len)
-    print(y.shape)
-    break
+dl = DataLoader(dataset=datas,batch_size=64, shuffle=True)
+model = RNNScratch(datas.vocab_size, 1024, 256)
+optimizer = torch.optim.SGD(model.parameters(),lr=0.1, momentum=0.9)
+
+for e in range(total_epoch):
+    model.train()
+    losses = []
+    for x, y in dl:
+        logits = model(x)                                        # (B, T, V)
+        loss = F.cross_entropy(logits.reshape(-1, datas.vocab_size), y.reshape(-1))   # (B*T, V) vs (B*T,)
+        losses.append(loss.item())
+        optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        with torch.no_grad():
+            optimizer.step()
+
+    if e % 20 == 0:
+        avg_loss = sum(losses) / len(losses)
+        print(avg_loss)
+
+# For sampling I need to feed a (natch_size, seq_length) sequence. 
+sample = model.sample('The ', 500, 1)
+print(sample)
