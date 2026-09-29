@@ -10,3 +10,4 @@ best_model.pt
 */__pycache__
 best_model_resnet.pt
 models/
+hws/
