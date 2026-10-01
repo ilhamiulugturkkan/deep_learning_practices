@@ -5,6 +5,8 @@ import torch.nn.functional as F
 
 torch.manual_seed(7)
 
+device = torch.accelerator.current_accelerator()
+
 def buildStoi():
     data = open('/Users/ilhamiulugturkkan/Desktop/deep_learning_practices/src/data/corpus.txt', 'r').read()
     all_chars = sorted(list(set(data)))
@@ -28,7 +30,7 @@ class TextSet(Dataset):
             self.itoc[i] = c
             self.stoi[c] = i
 
-        real_data = torch.tensor([self.stoi[c] for c in data], dtype=torch.long)
+        real_data = torch.tensor([self.stoi[c] for c in data], dtype=torch.long, device=device)
 
         self.data = real_data
         self.seq_length = seq_length
@@ -50,7 +52,7 @@ class RNNCell(nn.Module):
 
     def forward(self, X, prev_out=None):
         if prev_out is None:
-            prev_out = torch.zeros(X.shape[0], self.W_hh.shape[1])
+            prev_out = torch.zeros(X.shape[0], self.W_hh.shape[1], device=device)
         x_out = (torch.matmul(X, self.W_xh))
         h_out = (torch.matmul(prev_out, self.W_hh) + self.b_h)
         out = torch.tanh(x_out + h_out)
@@ -78,7 +80,7 @@ class RNNScratch(nn.Module):
 
     def sample(self, seed, sample_size ,temp=1):
         self.eval()
-        seed_idx = torch.tensor([stoi[c] for c in seed], dtype=torch.long)
+        seed_idx = torch.tensor([stoi[c] for c in seed], dtype=torch.long, device=device)
         seed_idx = seed_idx.reshape(1, seed_idx.shape[0])
         with torch.no_grad():
             for i in range(sample_size):
@@ -91,11 +93,11 @@ class RNNScratch(nn.Module):
         self.train()
         return seed
                 
-total_epoch = 5
+total_epoch = 100
 seq_len = 64
 datas = TextSet('/Users/ilhamiulugturkkan/Desktop/deep_learning_practices/src/data/corpus.txt', seq_length=seq_len)
 dl = DataLoader(dataset=datas,batch_size=64, shuffle=True)
-model = RNNScratch(datas.vocab_size, 1024, 256)
+model = RNNScratch(datas.vocab_size, 256, 256).to(device)
 optimizer = torch.optim.SGD(model.parameters(),lr=0.1, momentum=0.9)
 
 for e in range(total_epoch):
