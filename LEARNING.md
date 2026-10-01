@@ -300,3 +300,8 @@ times). The aggregate can't tell "everything's medium" apart from "half are huge
 half are ~0." Confirming vanishing for real means comparing gradient magnitude at
 individual timesteps, not just the total.
 
+# 09-30-2026
+
+Today I confidently implemented LSTM from scratch by checking RNNScratch code and of course architecture of LSTM. It was a good experience again. I forgot to put weights inside nn.Parameter and had a huge heart attack. Then I fixed it and trained the RNNScratch, LSTMScratch, and nn.LSTM with the same hyperparameters and same training data. Then I had another heart attack. Because RNN was taking much less time to train (as it has much less parameters and operations) and it was over performing LSTMScratch. It was a HUGE disappointment for me as I was really hoping to get amazing results with LSTM (even more amazing than the result I got with RNN). 
+
+Then I switched my optimizer to Adam and got that amazingER result. Today's lesson was 'Never use SGD when your architecture has a lot of things to tune AND some past information matters more than other past information for predicting what comes next, and that's exactly what gates are for (learning what to keep vs. discard). Because SGD has a fixed lr and it updates all parameters in a fixed way. However ADAM is the best. It combines RMSProp and Momentum and does some cool things internally (god knows what but it rocks). Also using RNN or LSTM doesn't matter too much when we are guessing the next char as it predictable from a short term of memory (like a couple of chars), however when we do complex stuff that requires a much more large window of past LSTM will be much more useful and worth the effort to train (hopefully),
