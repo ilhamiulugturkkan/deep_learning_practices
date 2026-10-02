@@ -309,3 +309,7 @@ Then I switched my optimizer to Adam and got that amazingER result. Today's less
 # 10-01-2026
 
 Lastly, I had a quiz kinda thing and failed to answer why there's a vanish/explode problem with RNNs. It's because to calculate the gradient of a previous timestamps weights, we have to apply the chain rule and estimate it by mutliplying every next weights gradient. If those gradients are close to 0, we basically end up in 0 after a while (depends on determined sequence length as well), if next gradients are more than 1, it explodes and become a very large value. That's why we want to keep gradients arund zero and use torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0). END OF WEEK 6
+
+# 10-02-2026 
+
+I did a class assignment and it was EASY. It would probably kill me if I didn't study this roadmap. However, I easily implemented different classes inheriting nn.Module, set the dataloaders etc. and easily trained models. It's nothing to do with this roadmap but it was cool to see the impact.
