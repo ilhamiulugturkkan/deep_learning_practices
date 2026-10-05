@@ -313,3 +313,45 @@ Lastly, I had a quiz kinda thing and failed to answer why there's a vanish/explo
 # 10-02-2026 
 
 I did a class assignment and it was EASY. It would probably kill me if I didn't study this roadmap. However, I easily implemented different classes inheriting nn.Module, set the dataloaders etc. and easily trained models. It's nothing to do with this roadmap but it was cool to see the impact.
+
+# 10-05-2026
+
+## Transformer
+
+### Self-Attention
+
+The first step in calculating self-attention is to create three vectors from each of the encoder’s input vectors (in text case the embedding of each word). So for each word, we create a Query vector, a Key vector, and a Value vector. These vectors are created by multiplying the embedding by three matrices that we trained during the training process.
+
+The second step in calculating self-attention is to calculate a score. The score determines how much focus to place on other parts of the input sentence as we encode a word at a certain position. The score is calculated by taking the dot product of the query vector with the key vector of the respective word we’re scoring. So if we’re processing the self-attention for the word in position #1, the first score would be the dot product of q1 and k1. The second score would be the dot product of q1 and k2.
+
+The third and fourth steps are to divide the scores by 8 (or smh else), then pass the result through a softmax operation. Softmax normalizes the scores so they’re all positive and add up to 1.
+
+The fifth step is to multiply each value vector by the softmax score. The intuition here is to keep intact the values of the word(s) we want to focus on, and drown-out irrelevant words (by multiplying them by tiny numbers like 0.001, for example).
+
+The sixth step is to sum up the weighted value vectors. This produces the output of the self-attention layer at this position (for the first word).
+
+The resulting vector is one we can send along to the feed-forward neural network. In the actual implementation, however, this calculation is done in matrix form for faster processing.
+
+The paper further refined the self-attention layer by adding a mechanism called “multi-headed” attention. If we do the same self-attention calculation we outlined above, just eight different times with different weight matrices, we end up with eight different Z matrices. But we need a way to condense these eight down into a single matrix because feed forward network expects a single vector. So we concat the matrices then multiply them by an additional weights matrix WO.
+
+### Positional Encoding
+
+One thing that’s missing from the model as we have described it so far is a way to account for the order of the words in the input sequence.
+
+To address this, the transformer adds a vector to each input embedding. These vectors follow a specific pattern that the model learns, which helps it determine the position of each word, or the distance between different words in the sequence. The intuition here is that adding these values to the embeddings provides meaningful distances between the embedding vectors once they’re projected into Q/K/V vectors and during dot-product attention. The formula for positional encoding is described in the paper (section 3.5).
+
+One detail in the architecture of the encoder that we need to mention before moving on, is that each sub-layer (self-attention, ffnn) in each encoder has a residual connection around it, and is followed by a layer-normalization step.
+
+### Decoder Side
+
+The encoder start by processing the input sequence. The output of the top encoder is then transformed into a set of attention vectors K and V. These are to be used by each decoder in its “encoder-decoder attention” layer which helps the decoder focus on appropriate places in the input sequence.
+
+The output of each step is fed to the bottom decoder in the next time step, and the decoders bubble up their decoding results just like the encoders did. And just like we did with the encoder inputs, we embed and add positional encoding to those decoder inputs to indicate the position of each word.
+
+In the decoder, the self-attention layer is only allowed to attend to earlier positions in the output sequence. This is done by masking future positions (setting them to -inf) before the softmax step in the self-attention calculation.
+
+The “Encoder-Decoder Attention” layer works just like multiheaded self-attention, except it creates its Queries matrix from the layer below it, and takes the Keys and Values matrix from the output of the encoder stack.
+
+Decoders repeat the process until a special symbol is reached indicating the transformer decoder has completed its output.
+
+Then we pass produced vector to a fully connected linear layer (vectr_size, vocab_size) to obtain logits vector and then we apply softmax.
