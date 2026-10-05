@@ -355,3 +355,5 @@ The “Encoder-Decoder Attention” layer works just like multiheaded self-atten
 Decoders repeat the process until a special symbol is reached indicating the transformer decoder has completed its output.
 
 Then we pass produced vector to a fully connected linear layer (vectr_size, vocab_size) to obtain logits vector and then we apply softmax.
+
+*BEAM_SEARCH*: the top two words (say, ‘I’ and ‘a’ for example), then in the next step, run the model twice: once assuming the first output position was the word ‘I’, and another time assuming the first output position was the word ‘a’, and whichever version produced less error considering both positions #1 and #2 is kept. We repeat this for positions #2 and #3…etc. This method is called “beam search”, where in our example, beam_size was two (meaning that at all times, two partial hypotheses (unfinished translations) are kept in memory), and top_beams is also two (meaning we’ll return two translations). These are both hyperparameters that you can experiment with.
