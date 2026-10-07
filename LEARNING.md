@@ -361,3 +361,8 @@ Decoders repeat the process until a special symbol is reached indicating the tra
 Then we pass produced vector to a fully connected linear layer (vectr_size, vocab_size) to obtain logits vector and then we apply softmax.
 
 *BEAM_SEARCH*: the top two words (say, ‘I’ and ‘a’ for example), then in the next step, run the model twice: once assuming the first output position was the word ‘I’, and another time assuming the first output position was the word ‘a’, and whichever version produced less error considering both positions #1 and #2 is kept. We repeat this for positions #2 and #3…etc. This method is called “beam search”, where in our example, beam_size was two (meaning that at all times, two partial hypotheses (unfinished translations) are kept in memory), and top_beams is also two (meaning we’ll return two translations). These are both hyperparameters that you can experiment with.
+
+- **Cost:** Q·Kᵀ is a (T, T) matrix, since every position scores every other position,
+  so compute and memory grow as O(T²) in sequence length (per head, per layer).
+  Doubling the context length makes the attention matrix 4× bigger.
+- **Direct access vs. an RNN:** each position reads every earlier position in a single step, so the gradient path between any two tokens has length 1. In an RNN, information from k steps back passes through k multiplications by W_hh, which is where vanishing and exploding gradients come from. Attention has no such chain.
