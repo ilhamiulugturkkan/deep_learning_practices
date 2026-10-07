@@ -332,6 +332,10 @@ The sixth step is to sum up the weighted value vectors. This produces the output
 
 The resulting vector is one we can send along to the feed-forward neural network. In the actual implementation, however, this calculation is done in matrix form for faster processing.
 
+### Summary 
+
+So we got Wk adn Wq (learnables) which build the key ang query matrices by matmuling the embeddings. We QdotK.T , divide by sqrt(dim), set -inf the future positions and softmax and get lets say w. Then we got Wv (learnable again) which builds the V vectors. We multiply V vectors with ws (the one with K*Q) and here's our output.
+
 The paper further refined the self-attention layer by adding a mechanism called “multi-headed” attention. If we do the same self-attention calculation we outlined above, just eight different times with different weight matrices, we end up with eight different Z matrices. But we need a way to condense these eight down into a single matrix because feed forward network expects a single vector. So we concat the matrices then multiply them by an additional weights matrix WO.
 
 ### Positional Encoding
