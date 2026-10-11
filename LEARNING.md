@@ -366,3 +366,17 @@ Then we pass produced vector to a fully connected linear layer (vectr_size, voca
   so compute and memory grow as O(T²) in sequence length (per head, per layer).
   Doubling the context length makes the attention matrix 4× bigger.
 - **Direct access vs. an RNN:** each position reads every earlier position in a single step, so the gradient path between any two tokens has length 1. In an RNN, information from k steps back passes through k multiplications by W_hh, which is where vanishing and exploding gradients come from. Attention has no such chain.
+
+# 10-11-2026
+
+I've finished the Andrej's video and implemented the multihead attention block myself (of course with a little help from video on some implementation details). I've learnt a lot of things and some details were interesting such as:
+
+-> torch.tril(torch.ones(block_size,block_size)) and then 
+wei = wei.masked_fill(self.tril[:T,:T] == 0, float('-inf'))
+wei = F.softmax(wei, dim=-1)
+
+is a genius method to prevent model from learning the future.
+
+-> Scaling with * self.head_size**-0.5 improved the performance of the model pretty well. It is a great method to reduce the variance of the dot products which we feed to softmax. It prevents extreme values therefore softmax function doesn't maps the values to 0 or 1 everytime.
+
+-> Residual connections increased the performance SIGNIFICANTLY. It was the update that had the most significant performance impact.
