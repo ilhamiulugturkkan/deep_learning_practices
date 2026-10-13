@@ -387,3 +387,32 @@ I've implemented a simple attention function. This time instead of using nn.Line
 Also we gotta do wei = q @ k.transpose(-2, -1) / q.shape[-1]**0.5. Andrej was keeping global vars but we don't have global saver all the time so it's a good prectice.
 
 POST VS PRE NORMALIZATION: Pre-norm keeps the residual path an unbroken chain of additions, so gradients flow straight through like in a ResNet, which makes deep transformers easier to train. It is much easier to understand with visualizations. Check them whenever you're confused.
+
+# 10-13-2026
+
+## AMP (Automatic Mixed Precision)
+
+Automatic Mixed Precision is a way to speed up the training process whileit dramatically reduces VRAM (GPU memory) usage during training by automatically switching between dtypes float32 and float16. During the training, temporarly saved intermediate activation values consumes a lot of space in VRAM. By reducing f32 to f16 we actually save half of that space.
+
+Autocast: autocast creates temporary FP16 copies of the inputs and weights to execute the operation and cahches them to repeatedly transform these values.  The actual mathematical operations (Softmax, LayerNorm, and the loss stay in fp32) runs in half-precision. This saves massive amounts of memory on activations. It is important to remind that *Gradients remain FP32*.
+
+Gradient scaling: helps prevent gradients with small magnitudes from flushing to zero (“underflowing”) when training with mixed precision.
+
+net = make_model(in_size, out_size, num_layers)
+opt = torch.optim.SGD(net.parameters(), lr=0.001)
+scaler = torch.amp.GradScaler("cuda" ,enabled=use_amp) # SCALES TO PREVENT UNDERFLOW
+
+for epoch in range(epochs):
+    for input, target in zip(data, targets):
+        with torch.autocast(device_type=device, dtype=torch.float16, enabled=use_amp): # AUTOCAST PROCESS. (torch.bfloat16 is better)
+            output = net(input)
+            loss = loss_fn(output, target)
+
+        scaler.scale(loss).backward() # PREVENTING UNDERFLOW
+        scaler.step(opt)
+        scaler.update()
+        opt.zero_grad()
+
+It is also important to state that this speeds up the process significantly when GPU is saturated (tensor cores on large matmuls too). So we can really push the limits of the GPU with this.
+
+However nowadays, bf16 is being used instead of f16 because it doesn't require any gradscaling process. BF16 has a lower decimal precision however, its range is much larger compared to F16. Therefore **NEARLY ALWAYS CHOOSE BF16** instead of F16. Use it on Ampere or newer; use fp16 + scaler on a T4.
