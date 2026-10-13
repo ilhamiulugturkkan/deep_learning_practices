@@ -416,3 +416,15 @@ for epoch in range(epochs):
 It is also important to state that this speeds up the process significantly when GPU is saturated (tensor cores on large matmuls too). So we can really push the limits of the GPU with this.
 
 However nowadays, bf16 is being used instead of f16 because it doesn't require any gradscaling process. BF16 has a lower decimal precision however, its range is much larger compared to F16. Therefore **NEARLY ALWAYS CHOOSE BF16** instead of F16. Use it on Ampere or newer; use fp16 + scaler on a T4.
+
+## Gradient Accumulation
+
+Let's say we need large amount of batch size to update the data in an optimal way (because a bigger batch gives a less noisy gradient) but our GPU memory is not sufficient. No problem, we use gradient accumulation. Let's say we want batches sized 256 but can only handle 64. We feed 4  (accumulation step) mini-batches sized 64 and then take an optimizer step. Therefore, we accumulate all the grads from each mini-batch and update the weights as we feed the model with a 256 sized batch. So our effective batch size becomes mini-batch size * accumulation step. So accumulation is a memory trick, not a speed trick: the total compute is identical, and only the number of weight updates goes down.
+
+Also, we apply loss / accum_steps, because otherwise the summed gradient is too large.
+
+## Gradient Checkpointing
+
+As we mentioned on AMP, caching intermediate activations consumes a lot of GPU space during training. To prevent that we can apply gradient checkpointing. Gradient checkpointing only saves certain activations and discards the rest. This forces the backward pass to recompute some of the activations on-the-fly as they’re needed. Training is typically slower because the backward pass recomputes discarded activations, but checkpointing reduces activation memory.
+
+TLDR Activation checkpointing is a technique that trades compute for memory
