@@ -17,15 +17,13 @@ def main(config, project):
 
 
     train_dataload, val_dataload = DATASETS[config['dataset']](batch_size=config.get('batch_size', 64), shuffle = config.get('shuffle', True))
-    print(train_dataload)
-    print(val_dataload)
-
+ 
     print(config['model_args'])
     model = MODELS[config['model']](**config['model_args']).to(device)
 
     loss_fn = nn.CrossEntropyLoss()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr = config['lr'], momentum=0.9, weight_decay=5e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr = config['lr'])
     t_max = config['epochs']
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
 
@@ -47,31 +45,8 @@ def main(config, project):
                 loss = loss_fn(logits, labels)
                 optimizer.zero_grad()
                 loss.backward()
-
-                '''w1 = model.seq[0].weight          # (128, 784)
-                g1 = model.seq[0].weight.grad     # same shape, populated by backward()
-                w2 = model.seq[3].weight
-                g2 = model.seq[3].weight.grad
-
-                run.log({
-                "w_hist_layer1": wandb.Histogram(w1.detach().cpu().numpy()),
-                "w_hist_layer2": wandb.Histogram(w2.detach().cpu().numpy()),
-                })
-
-                run.log({
-                    "grad_hist_layer1": wandb.Histogram(g1.detach().cpu().numpy()),
-                    "grad_hist_layer2": wandb.Histogram(g2.detach().cpu().numpy()),
-                })'''
                 train_losses.append(loss.item())
                 optimizer.step()
-
-                '''ratio1 = np.log10((config['lr'] * g1.std().item()) / w1.std().item())
-                ratio2 = np.log10((config['lr'] * g2.std().item()) / w2.std().item())
-
-                run.log({
-                    "update_ratio_layer1": ratio1,
-                    "update_ratio_layer2": ratio2,
-                })'''
                 
 
             train_loss = sum(train_losses) / len(train_losses)
@@ -102,7 +77,8 @@ def main(config, project):
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 patience_counter = 0
-                torch.save(model.state_dict(), "best_model_cnn.pt")   # checkpoint
+                model_name = config["run_name"] + ".pt"
+                torch.save(model.state_dict(), model_name)   # checkpoint
             else:
                 patience_counter += 1
                 if patience_counter >= config["patience"]:
