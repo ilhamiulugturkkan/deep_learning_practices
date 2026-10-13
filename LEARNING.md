@@ -385,3 +385,5 @@ is a genius method to prevent model from learning the future.
 I've implemented a simple attention function. This time instead of using nn.Linear I matmul input with query, key, and value matrices and did all the job. This was helpful cuz I can understand the shapes etc. better this way. Claude wrote the mock data and assertions. I said no AI at the begining but that's life. He's a good guide and 'disturbingly boring code' implementer.
 
 Also we gotta do wei = q @ k.transpose(-2, -1) / q.shape[-1]**0.5. Andrej was keeping global vars but we don't have global saver all the time so it's a good prectice.
+
+POST VS PRE NORMALIZATION: Pre-norm keeps the residual path an unbroken chain of additions, so gradients flow straight through like in a ResNet, which makes deep transformers easier to train. It is much easier to understand with visualizations. Check them whenever you're confused.
