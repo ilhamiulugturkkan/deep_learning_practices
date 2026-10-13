@@ -428,3 +428,32 @@ Also, we apply loss / accum_steps, because otherwise the summed gradient is too 
 As we mentioned on AMP, caching intermediate activations consumes a lot of GPU space during training. To prevent that we can apply gradient checkpointing. Gradient checkpointing only saves certain activations and discards the rest. This forces the backward pass to recompute some of the activations on-the-fly as they’re needed. Training is typically slower because the backward pass recomputes discarded activations, but checkpointing reduces activation memory.
 
 TLDR Activation checkpointing is a technique that trades compute for memory
+
+## Linear Warmup
+
+At the beginning of the training all the weights are random. With large learning rate, things can go CHAOTIC BUM and we can see divergence or a loss spike from big early updates or even nothing crashing happens our training time can be longer than it should've. Therefore linear warmup starts the learning rate nearly from zero and slowly increases it as the weights stabilizes and in a good shape to learn.
+
+Also it is worth to mention that Adam’s running estimates of gradient size are unreliable in the first few steps, so its effective steps can be too large. Warmup covers that period.
+
+Warmup is short, typically 1-5% of total steps.
+
+## Cosine Decay
+
+Once the warmup phase hits the maximum learning rate, the cosine decay takes over for the remainder of the training duration. I saw from Andrej's videos that lowering the learning rate empirically increases the performance. It decays slowly at first, fastest in the middle, and slowly again near the end.
+
+So with linear warmup and cosine decay we get a much smoother training process as learning rate starts low when it is dangerous to have high lr. Then LR increases and reaches to the max when it is a good time to learn. Lastly, cosine decay takes over and decreases the LR all the way to the 0 when we need polishing.
+
+Can be implemented like:
+
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+
+warmup_steps = 5
+warmup_scheduler = LinearLR(optimizer, start_factor=0.1, end_factor=1.0, total_iters=warmup_steps)
+
+main_scheduler = CosineAnnealingLR(optimizer, T_max=45)
+
+scheduler = SequentialLR(
+    optimizer, 
+    schedulers=[warmup_scheduler, main_scheduler], 
+    milestones=[warmup_steps] # SWITCH FROM LIENARLR TO COSINE DECAY
+)
