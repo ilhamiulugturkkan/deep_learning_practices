@@ -10,5 +10,9 @@ batch_size: 64
 epochs: 50
 lr: 0.01
 patience: 50
-device: cpu   # null = auto-detect
+device: cuda   # null = auto-detect
 shuffle: True
+accum_step: 1
+bf16: False
+resume: "best.pt"
+grad_clip: False
