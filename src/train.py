@@ -1,5 +1,7 @@
 import yaml
 import argparse
+import math
+import os
 import torch
 from torch import nn
 import torch.nn.functional as T
@@ -24,36 +26,61 @@ def main(config, project):
     loss_fn = nn.CrossEntropyLoss()
 
     optimizer = torch.optim.AdamW(model.parameters(), lr = config['lr'])
-    t_max = config['epochs']
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
+
+    accumulation_step = config.get('accum_step', 1)
+    total_steps = config['epochs'] * math.ceil(len(train_dataload) / accumulation_step)
+    warmup_steps = max(1, int(total_steps * 0.03))
+    warmup_scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=0.1, end_factor=1.0, total_iters=warmup_steps)
+
+    main_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total_steps-warmup_steps)
+
+    scheduler = torch.optim.lr_scheduler.SequentialLR(
+        optimizer, 
+        schedulers=[warmup_scheduler, main_scheduler], 
+        milestones=[warmup_steps] # SWITCH FROM LIENARLR TO COSINE DECAY
+    )
 
     start_time = time.perf_counter()
 
     best_val_loss = float("inf")
     patience_counter = 0
+    scaler = torch.GradScaler(device, enabled=not config.get('bf16'))
 
+    amp_dtype = torch.bfloat16 if config.get('bf16') else torch.float16
 
     with wandb.init(project=project, name=config['run_name'], config=config) as run:
         
         for epoch in range(config["epochs"]):
             train_losses = []
-            for images, labels in train_dataload:
+            temp_losses =[]
+            for i, (images, labels) in enumerate(train_dataload):
                 images = images.to(device=device)
                 labels = labels.to(device=device)
-                logits = model(images)
 
-                loss = loss_fn(logits, labels)
-                optimizer.zero_grad()
-                loss.backward()
-                train_losses.append(loss.item())
-                optimizer.step()
-                
+                with torch.autocast(device_type=device, dtype=amp_dtype):
+                    logits = model(images)
+                    loss = loss_fn(logits, labels)
+                scaler.scale(loss / accumulation_step).backward()  
+
+                temp_losses.append(loss.item())
+
+                if (i+1) % accumulation_step == 0 or (i+1) == len(train_dataload):
+                    if config.get('grad_clip', False) == True:
+                        scaler.unscale_(optimizer)
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                    
+                    scaler.step(optimizer)
+                    scaler.update()
+                    optimizer.zero_grad(set_to_none=True)
+
+                    scheduler.step()
+
+                    avg_loss = sum(temp_losses) / len(temp_losses)
+                    train_losses.append(avg_loss)
+                    temp_losses = []
 
             train_loss = sum(train_losses) / len(train_losses)
             run.log({"train_loss": train_loss})
-
-
-            scheduler.step()
 
             
             val_losses = []
@@ -74,11 +101,25 @@ def main(config, project):
             run.log({"val_loss": val_loss, 'accuracy': accuracy})
             print({"val_loss": val_loss, 'accuracy': accuracy})
 
+
+            # Checkpoint!!! 
+            ckpt = {
+                "model": model.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "scheduler": scheduler.state_dict(),
+                "scaler": scaler.state_dict(),
+                "epoch": epoch,
+                "best_val_loss": best_val_loss,
+                "patience_counter": patience_counter,
+            }
+            torch.save(ckpt, "last.tmp")
+            os.replace("last.tmp", "last.pt")
+
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 patience_counter = 0
-                model_name = config["run_name"] + ".pt"
-                torch.save(model.state_dict(), model_name)   # checkpoint
+                torch.save(ckpt, "best.tmp")
+                os.replace("best.tmp", "best.pt")
             else:
                 patience_counter += 1
                 if patience_counter >= config["patience"]:
