@@ -47,10 +47,21 @@ def main(config, project):
     scaler = torch.GradScaler(device, enabled=not config.get('bf16'))
 
     amp_dtype = torch.bfloat16 if config.get('bf16') else torch.float16
+    start_epoch = 0
+    if config.get("resume"):                      # e.g. config["resume"] = "last.pt"
+        ckpt = torch.load(config["resume"], map_location=device)
+        model.load_state_dict(ckpt["model"])
+        optimizer.load_state_dict(ckpt["optimizer"])
+        scheduler.load_state_dict(ckpt["scheduler"])
+        scaler.load_state_dict(ckpt["scaler"])
+        best_val_loss = ckpt["best_val_loss"]
+        patience_counter = ckpt["patience_counter"]
+        start_epoch = ckpt["epoch"] + 1
 
-    with wandb.init(project=project, name=config['run_name'], config=config) as run:
+    run_id = ckpt["wandb_run_id"] if config.get("resume") else None
+    with wandb.init(project=project, name=config['run_name'], id=run_id, resume="allow", config=config) as run:
         
-        for epoch in range(config["epochs"]):
+        for epoch in range(start_epoch, config["epochs"]):
             train_losses = []
             temp_losses =[]
             for i, (images, labels) in enumerate(train_dataload):
@@ -111,6 +122,7 @@ def main(config, project):
                 "epoch": epoch,
                 "best_val_loss": best_val_loss,
                 "patience_counter": patience_counter,
+                "wandb_run_id": run.id
             }
             torch.save(ckpt, "last.tmp")
             os.replace("last.tmp", "last.pt")
