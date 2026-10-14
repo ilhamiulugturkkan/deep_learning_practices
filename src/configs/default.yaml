@@ -1,0 +1,16 @@
+run_name: default
+project: default
+seed: 7
+model: model in models.py
+model_args: based on the model
+dataset: based on the model
+batch_size: 0
+epochs: 0
+lr: 0
+patience: int
+device: null = auto-detect
+shuffle: True or False
+accum_step: some int
+bf16: True or False. For AMP
+resume: "last.pt" null means a fresh run
+grad_clip: True or False
