@@ -457,3 +457,7 @@ scheduler = SequentialLR(
     schedulers=[warmup_scheduler, main_scheduler], 
     milestones=[warmup_steps] # SWITCH FROM LIENARLR TO COSINE DECAY
 )
+
+I'm done with this repo. I guess I've learnt most of the fundamentals and got some hands on practices. I am happy with all the things I've learn and now it's time to build something.
+
+I am planning to build bakLLMa which is something like vLLM. I think it might be a good practice to see and control what's happening under the hood while using LLMs. Let's see what happens.
